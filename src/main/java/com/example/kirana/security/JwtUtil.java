@@ -24,8 +24,8 @@ public class JwtUtil {
      public String generateToken(String userName, String roleId, String storeId) {
 
          Map<String, Object> claims = new HashMap<>();
-         claims.put("role", roleId);     // ROLE_ADMIN
-         claims.put("storeId", storeId); // nullable
+         claims.put("role", roleId);
+         claims.put("storeId", storeId);
 
          return Jwts.builder()
                  .setClaims(claims)

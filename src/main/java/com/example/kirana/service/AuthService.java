@@ -34,27 +34,24 @@ public class AuthService {
 
     public String login(String username, String password) {
 
-        // 1️⃣ Fetch user
         User user = userDao.findByUserName(username);
 
-        // 2️⃣ Validate password
+
         if (!passwordEncoder.matches(password, user.getPassword())) {
             throw new RuntimeException("Invalid credentials");
         }
 
-        // 3️⃣ Fetch user-role mapping (ONE role)
+
         UserRole userRole = userRoleDao.findByUserId(user.getUserId());
         if (userRole == null) {
             throw new RuntimeException("User has no role assigned");
         }
 
-        // 4️⃣ Fetch role
         Role role = roleDao.findById(userRole.getRoleId())
                 .orElseThrow(() ->
                         new RuntimeException("Role not found")
                 );
 
-        // 5️⃣ Generate JWT
         return jwtUtil.generateToken(
                 user.getUserName(),
                 role.getRoleName(),

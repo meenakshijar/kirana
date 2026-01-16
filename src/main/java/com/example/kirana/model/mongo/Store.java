@@ -11,8 +11,15 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @AllArgsConstructor
 public class Store {
     @Id
-    private String storeId;
-    private String storeRegion;
-    private String region;
+    private String storeId; // This now serves as the primary key (_id)
+
+    private String storeName;
+    private boolean isActive;
+    private String city;
+    private String country;
+    private String address;
+    private String pincode;
+    private String contactEmail;
+    private String contactNumber;
     private String baseCurrency;
 }
