@@ -6,6 +6,7 @@ import com.example.kirana.dto.PurchaseRequest;
 import com.example.kirana.dto.PurchaseResponse;
 import com.example.kirana.model.TransactionType;
 import com.example.kirana.model.postgres.PurchaseLineItems;
+import com.example.kirana.service.FxRateService;
 import com.example.kirana.service.PurchaseService;
 import org.springframework.stereotype.Service;
 
@@ -19,9 +20,12 @@ import java.util.UUID;
 public class PurchaseServiceImpl implements PurchaseService {
 
     private final PurchaseLineItemsDao purchaseLineItemsDao;
+    private final FxRateService fxRateService;
 
-    public PurchaseServiceImpl(PurchaseLineItemsDao purchaseLineItemsDao) {
+    public PurchaseServiceImpl(PurchaseLineItemsDao purchaseLineItemsDao,
+                               FxRateService fxRateService) {
         this.purchaseLineItemsDao = purchaseLineItemsDao;
+        this.fxRateService = fxRateService;
     }
 
     @Override
@@ -33,10 +37,19 @@ public class PurchaseServiceImpl implements PurchaseService {
 
         List<PurchaseLineItems> itemsToSave = new ArrayList<>();
 
+        // ✅ For now hardcode baseCurrency (later fetch from Store in Mongo)
+        String baseCurrency = "INR";
+
         for (PurchaseItemsRequest item : request.getItems()) {
 
-            BigDecimal totalAmount = item.getAmount()
+            BigDecimal originalTotalAmount = item.getAmount()
                     .multiply(BigDecimal.valueOf(item.getQuantity()));
+
+            // ✅ get rate from Redis cache (or API fallback)
+            BigDecimal rate = fxRateService.getFxRate(item.getCurrency(), baseCurrency);
+
+            // ✅ convert to base currency amount
+            BigDecimal baseTotalAmount = originalTotalAmount.multiply(rate);
 
             PurchaseLineItems purchaseLineItems = new PurchaseLineItems();
             purchaseLineItems.setPurchaseItemId("PUR_ITEM_" + UUID.randomUUID());
@@ -51,12 +64,12 @@ public class PurchaseServiceImpl implements PurchaseService {
             purchaseLineItems.setPricePerItem(item.getAmount());
             purchaseLineItems.setOriginalCurrency(item.getCurrency());
 
-            // For now baseCurrency = originalCurrency and conversionRate = 1
-            // Later you can integrate FX service like Transaction flow
-            purchaseLineItems.setBaseCurrency(item.getCurrency());
-            purchaseLineItems.setConversionRate(BigDecimal.ONE);
+            // ✅ Set baseCurrency + conversionRate
+            purchaseLineItems.setBaseCurrency(baseCurrency);
+            purchaseLineItems.setConversionRate(rate);
 
-            purchaseLineItems.setTotalAmount(totalAmount);
+            // ✅ store total in base currency
+            purchaseLineItems.setTotalAmount(baseTotalAmount);
 
             purchaseLineItems.setCreatedAt(LocalDateTime.now());
 

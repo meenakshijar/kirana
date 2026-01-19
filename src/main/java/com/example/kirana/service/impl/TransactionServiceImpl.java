@@ -11,6 +11,7 @@ import com.example.kirana.model.TransactionType;
 import com.example.kirana.model.mongo.Transactions;
 import com.example.kirana.model.postgres.TransactionLineItems;
 import com.example.kirana.repository.mongo.TransactionsRepository;
+import com.example.kirana.service.FxRateService;
 import com.example.kirana.service.TransactionService;
 import org.springframework.stereotype.Service;
 
@@ -25,13 +26,14 @@ public class TransactionServiceImpl implements TransactionService {
 
     private final TransactionLineItemsDao transactionLineItemsDao;
     private final TransactionsRepository transactionsRepository; // Mongo view (read-only)
+    private final FxRateService fxRateService;
 
-    public TransactionServiceImpl(
-            TransactionLineItemsDao transactionLineItemsDao,
-            TransactionsRepository transactionsRepository
-    ) {
+    public TransactionServiceImpl(TransactionLineItemsDao transactionLineItemsDao,
+                                  TransactionsRepository transactionsRepository,
+                                  FxRateService fxRateService) {
         this.transactionLineItemsDao = transactionLineItemsDao;
         this.transactionsRepository = transactionsRepository;
+        this.fxRateService = fxRateService;
     }
 
     @Override
@@ -42,10 +44,20 @@ public class TransactionServiceImpl implements TransactionService {
 
         List<TransactionLineItems> itemsToSave = new ArrayList<>();
 
+        // ✅ For now hardcode store base currency (later fetch from store in MongoDB)
+        String baseCurrency = "INR";
+
         for (TransactionItemsRequest item : request.getItems()) {
 
-            BigDecimal total = item.getAmount()
+            // ✅ original total = amount * quantity (in original currency)
+            BigDecimal originalTotal = item.getAmount()
                     .multiply(BigDecimal.valueOf(item.getQuantity()));
+
+            // ✅ conversion rate from Redis cache (or fallback API)
+            BigDecimal rate = fxRateService.getFxRate(item.getCurrency(), baseCurrency);
+
+            // ✅ convert to base currency
+            BigDecimal baseTotal = originalTotal.multiply(rate);
 
             TransactionLineItems lineItems = new TransactionLineItems();
             lineItems.setTransactionItemId("TXN_ITEM_" + UUID.randomUUID());
@@ -57,14 +69,16 @@ public class TransactionServiceImpl implements TransactionService {
             lineItems.setProductId(item.getProductId());
             lineItems.setQuantity(item.getQuantity());
 
-            lineItems.setPricePerItem(item.getAmount());
-            lineItems.setOriginalCurrency(item.getCurrency());
+            lineItems.setPricePerItem(item.getAmount());          // original price/amount
+            lineItems.setOriginalCurrency(item.getCurrency());    // original currency
 
-            // later you can plug FX service here
-            lineItems.setBaseCurrency(item.getCurrency());
-            lineItems.setConversionRate(BigDecimal.ONE);
+            // ✅ base conversion
+            lineItems.setBaseCurrency(baseCurrency);
+            lineItems.setConversionRate(rate);
 
-            lineItems.setTotalProductAmount(total);
+            // ✅ store total in base currency
+            lineItems.setTotalProductAmount(baseTotal);
+
             lineItems.setCreatedAt(LocalDateTime.now());
 
             itemsToSave.add(lineItems);
@@ -104,7 +118,6 @@ public class TransactionServiceImpl implements TransactionService {
     @Override
     public TransactionDetailItemsResponse getTransactionByTransactionId(String transactionId) {
 
-        // Fetch line items from Postgres ledger table
         List<TransactionLineItems> dbItems = transactionLineItemsDao.findByTransactionId(transactionId);
 
         if (dbItems.isEmpty()) {
