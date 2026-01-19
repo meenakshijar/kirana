@@ -1,0 +1,2 @@
+reportId,storeId,period,totalCredit,totalDebit,netFlow,generatedAt
+RPT_e1abd987-4230-4940-8d55-834e59e68013,STORE_001,YEARLY,220.00,1700.00,-1480.00,2026-01-19T11:12:51.976044

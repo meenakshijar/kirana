@@ -9,17 +9,17 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
-@Component
+//@Component
 public class JwtFilter extends OncePerRequestFilter {
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getServletPath();
 
-        // ✅ skip jwt check for public endpoints
         return path.startsWith("/auth/")
-                || path.equals("/transactions")
-                || path.startsWith("/transactions/");
+                || path.startsWith("/transactions")
+                || path.startsWith("/purchases")
+                || path.startsWith("/report");
     }
 
     @Override

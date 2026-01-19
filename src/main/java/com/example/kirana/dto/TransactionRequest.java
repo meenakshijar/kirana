@@ -9,7 +9,7 @@ public class TransactionRequest {
 
     private String storeId;
     private String transactionType; // CREDIT / DEBIT
-    private List<TransactionItemsRequest> items;
+    private List<com.example.kirana.dto.TransactionItemsRequest> items;
 
     // getters + setters
 }

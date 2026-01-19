@@ -40,7 +40,6 @@ public class TransactionController {
         List<TransactionSummary> response = transactionService.getTransactionsByStoreId(storeId);
         return ResponseEntity.ok(response);
     }
-
     // ✅ 3) Get Transaction Details by transactionId
     // GET /transactions/{transactionId}
     @GetMapping("/{transactionId}")
