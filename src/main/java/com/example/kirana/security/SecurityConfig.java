@@ -40,7 +40,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
 
                         .requestMatchers("/auth/**").permitAll()
-
+                        .requestMatchers("/actuator/**").permitAll()
                         .requestMatchers("/store/**","/store").hasRole("SUPER_ADMIN")
 
                         .requestMatchers("/users/**","/users").hasAnyRole("ADMIN", "SUPER_ADMIN")

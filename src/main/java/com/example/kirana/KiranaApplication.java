@@ -6,7 +6,9 @@ import org.springframework.data.mongodb.repository.config.EnableMongoRepositorie
 
 @SpringBootApplication
 @EnableMongoRepositories(basePackages = "com.example.kirana.repository.mongo")
-public class KiranaApplication {
+public class
+
+KiranaApplication {
 
 	public static void main(String[] args) {
 		SpringApplication.run(KiranaApplication.class, args);
