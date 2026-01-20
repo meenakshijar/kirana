@@ -85,6 +85,19 @@ public class TransactionServiceImpl implements TransactionService {
         }
 
         transactionLineItemsDao.saveAll(itemsToSave);
+        BigDecimal txnTotal = itemsToSave.stream()
+                .map(TransactionLineItems::getTotalProductAmount)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        Transactions txn = new Transactions();
+        txn.setTransactionId(transactionId);
+        txn.setStoreId(request.getStoreId());
+        txn.setTransactionType(type);
+        txn.setTotalAmount(txnTotal);
+        txn.setBaseCurrency(itemsToSave.get(0).getBaseCurrency());
+        txn.setCreatedAt(LocalDateTime.now());
+
+        transactionsRepository.save(txn);
 
         TransactionResponse response = new TransactionResponse();
         response.setTransactionId(transactionId);

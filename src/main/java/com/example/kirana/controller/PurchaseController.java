@@ -4,7 +4,9 @@ import com.example.kirana.dto.PurchaseRequest;
 import com.example.kirana.dto.PurchaseResponse;
 import com.example.kirana.service.PurchaseService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+@PreAuthorize("hasAnyRole('ADMIN','SUPER_ADMIN')")
 
 @RestController
 @RequestMapping("/purchases")

@@ -9,18 +9,20 @@ import java.util.Optional;
 
 
 @Repository
-public class RoleDaoImpl implements RoleDao {
+public class
+RoleDaoImpl implements RoleDao {
 
     private final RolesRepository roleRepository;
 
     public RoleDaoImpl(RolesRepository roleRepository) {
         this.roleRepository = roleRepository;
     }
-
     @Override
     public Optional<Role> findById(String roleId) {
-        return roleRepository.findById(roleId);
+        return roleRepository.findByRoleId(roleId);
     }
+
+
 
 }
 

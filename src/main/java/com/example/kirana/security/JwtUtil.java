@@ -20,8 +20,15 @@ public class JwtUtil {
             "this-is-a-very-long-secret-key-for-hs256-at-least-32-bytes";
 
     private static final Key key = Keys.hmacShaKeyFor(SECRET.getBytes());
+    public Claims extractAllClaims(String token) {
+        return Jwts.parser()
+                .setSigningKey(key)
+                .parseClaimsJws(token)
+                .getBody();
+    }
 
-     public String generateToken(String userName, String roleId, String storeId) {
+
+    public String generateToken(String userName, String roleId, String storeId) {
 
          Map<String, Object> claims = new HashMap<>();
          claims.put("role", roleId);

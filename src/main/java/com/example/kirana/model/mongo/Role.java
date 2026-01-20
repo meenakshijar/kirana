@@ -11,7 +11,10 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @AllArgsConstructor
 
 public class Role {
+
+
     @Id
+    private String id;
     private String roleId;
     private String roleName;
 

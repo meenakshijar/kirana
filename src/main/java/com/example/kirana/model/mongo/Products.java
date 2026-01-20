@@ -1,12 +1,13 @@
 package com.example.kirana.model.mongo;
 
 
+import lombok.Data;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-
+@Data
 @Document(collection = "products")
 public class Products {
 
@@ -14,7 +15,7 @@ public class Products {
     private String productId;
 
     private String storeId;
-    private String name;
+    private String productName;
     private String category;
 
     private BigDecimal costPrice;
@@ -24,5 +25,5 @@ public class Products {
 
     private String unit;
     private String brand;
-    private LocalDateTime createdAt;
+    private LocalDateTime productCreatedAt;
 }

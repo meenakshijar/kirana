@@ -1,11 +1,10 @@
 package com.example.kirana.controller;
 
 import com.example.kirana.dto.LoginRequest;
+import com.example.kirana.dto.LoginResponse;
 import com.example.kirana.service.AuthService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.Map;
 
 @RestController
 @RequestMapping("/auth")
@@ -18,13 +17,16 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody LoginRequest request) {
+    public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest request) {
 
-        String token = authService.login(
+        System.out.println("REQUEST userName = " + request.getUserName());
+        System.out.println("REQUEST password = " + request.getPassword());
+
+        LoginResponse response = authService.login(
                 request.getUserName(),
                 request.getPassword()
         );
 
-        return ResponseEntity.ok(Map.of("token", token));
+        return ResponseEntity.ok(response);
     }
 }

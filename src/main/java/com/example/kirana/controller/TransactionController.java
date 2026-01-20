@@ -7,9 +7,11 @@ import com.example.kirana.dto.TransactionResponse;
 import com.example.kirana.dto.TransactionSummary;
 import com.example.kirana.service.TransactionService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+@PreAuthorize("hasAnyRole('USER','ADMIN','SUPER_ADMIN')")
 
 @RestController
 @RequestMapping("/transactions")

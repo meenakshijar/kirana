@@ -3,6 +3,7 @@ package com.example.kirana.service;
 import com.example.kirana.dao.UserDao;
 import com.example.kirana.dao.UserRoleDao;
 import com.example.kirana.dao.RoleDao;
+import com.example.kirana.dto.LoginResponse;
 import com.example.kirana.model.mongo.User;
 import com.example.kirana.model.mongo.UserRole;
 import com.example.kirana.model.mongo.Role;
@@ -32,15 +33,21 @@ public class AuthService {
         this.jwtUtil = jwtUtil;
     }
 
-    public String login(String username, String password) {
+    public LoginResponse login(String username, String password) {
+        System.out.println("USERNAME RECEIVED = " + username);
+
+
+
 
         User user = userDao.findByUserName(username);
 
-
+        if (user == null) {
+            throw new RuntimeException("User not found");
+        }
+        System.out.println("DB HASH = " + user.getPassword());
         if (!passwordEncoder.matches(password, user.getPassword())) {
             throw new RuntimeException("Invalid credentials");
         }
-
 
         UserRole userRole = userRoleDao.findByUserId(user.getUserId());
         if (userRole == null) {
@@ -48,14 +55,22 @@ public class AuthService {
         }
 
         Role role = roleDao.findById(userRole.getRoleId())
-                .orElseThrow(() ->
-                        new RuntimeException("Role not found")
-                );
+                .orElseThrow(() -> new RuntimeException("Role not found"));
 
-        return jwtUtil.generateToken(
+        String token = jwtUtil.generateToken(
                 user.getUserName(),
                 role.getRoleName(),
                 userRole.getStoreId()
         );
+        System.out.println("PASSWORD MATCH = " + passwordEncoder.matches(password,
+                user.getPassword()));
+        LoginResponse response = new LoginResponse();
+        response.setToken(token);
+        response.setRole(role.getRoleName());          // ADMIN / USER / SUPER_ADMIN
+        response.setStoreId(userRole.getStoreId());    // can be null for superadmin
+        response.setExpiresIn(3600);
+
+        return response;
     }
+
 }

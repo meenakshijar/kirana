@@ -1,4 +1,5 @@
 package com.example.kirana.dao.impl;
+
 import com.example.kirana.dao.UserRoleDao;
 import com.example.kirana.model.mongo.UserRole;
 import com.example.kirana.repository.mongo.UserRolesRepository;
@@ -15,9 +16,12 @@ public class UserRoleDaoImpl implements UserRoleDao {
 
     @Override
     public UserRole findByUserId(String userId) {
-        return userRoleRepository.findById(userId)
-                .orElseThrow(() ->
-                        new RuntimeException("User role mapping not found"));
-    }
+        UserRole userRole = userRoleRepository.findByUserId(userId);
 
+        if (userRole == null) {
+            throw new RuntimeException("User role mapping not found for userId: " + userId);
+        }
+
+        return userRole;
+    }
 }
