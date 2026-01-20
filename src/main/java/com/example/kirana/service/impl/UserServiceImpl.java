@@ -51,27 +51,23 @@ public class UserServiceImpl implements UserService {
 
         String roleName = request.getRole().toUpperCase();
 
-        // ✅ Only allow creation of USER / ADMIN here
         if (!roleName.equals("USER") && !roleName.equals("ADMIN")) {
             throw new RuntimeException("Only USER or ADMIN can be created from this API");
         }
 
-        // ✅ prevent duplicate username
+        // ✅ FIXED duplicate check
         Optional<User> existing = userRepository.findByUserName(request.getUserName());
-        if (existing != null) {
+        if (existing.isPresent()) {
             throw new RuntimeException("Username already exists: " + request.getUserName());
         }
 
-        // ✅ StoreId required for ADMIN and USER
         if (request.getStoreId() == null || request.getStoreId().isBlank()) {
             throw new RuntimeException("storeId is required for USER/ADMIN");
         }
 
-        // ✅ Ensure role exists in roles collection
         Role role = roleRepository.findByRoleName(roleName)
                 .orElseThrow(() -> new RuntimeException("Role not found in DB: " + roleName));
 
-        // ✅ create user
         String userId = "USR_" + UUID.randomUUID();
 
         User user = new User();
@@ -82,8 +78,9 @@ public class UserServiceImpl implements UserService {
 
         userRepository.save(user);
 
-        // ✅ map user-role-store
+        // ✅ FIXED userRoleId set
         UserRole userRole = new UserRole();
+        userRole.setUserRoleId("UR_" + UUID.randomUUID());
         userRole.setUserId(userId);
         userRole.setRoleId(role.getRoleId());
         userRole.setStoreId(request.getStoreId());

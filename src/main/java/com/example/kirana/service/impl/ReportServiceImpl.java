@@ -29,7 +29,7 @@ public class ReportServiceImpl implements ReportService {
     @Override
     public ReportResponse getSummary(ReportRequest request) {
 
-        // Example: baseCurrency should come from store collection later
+
         String baseCurrency = "INR";
 
         LocalDateTime start;
