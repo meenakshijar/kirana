@@ -54,7 +54,7 @@ public class JwtFilter extends OncePerRequestFilter {
             String userName = claims.getSubject();
             String role = (String) claims.get("role"); // ADMIN / USER / SUPER_ADMIN
 
-            // ✅ IMPORTANT: Spring expects ROLE_ prefix
+
             SimpleGrantedAuthority authority =
                     new SimpleGrantedAuthority("ROLE_" + role);
 
@@ -64,6 +64,8 @@ public class JwtFilter extends OncePerRequestFilter {
                             null,
                             List.of(authority)
                     );
+            System.out.println("PATH = " + request.getServletPath());
+            System.out.println("AUTH HEADER = " + request.getHeader("Authorization"));
 
             SecurityContextHolder.getContext().setAuthentication(authentication);
 

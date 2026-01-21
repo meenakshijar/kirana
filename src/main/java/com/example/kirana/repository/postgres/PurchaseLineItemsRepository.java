@@ -14,17 +14,17 @@ import java.util.List;
 public interface PurchaseLineItemsRepository
         extends JpaRepository<PurchaseLineItems, String> {
 
-    // 1️⃣ Fetch all line items of a purchase
+    // Fetch all line items of a purchase
     List<PurchaseLineItems> findByPurchaseId(String purchaseId);
 
-    // 2️⃣ Fetch store purchases for weekly/monthly/yearly report (date range)
+    // Fetch store purchases for weekly/monthly/yearly report (date range)
     List<PurchaseLineItems> findByStoreIdAndCreatedAtBetween(
             String storeId,
             LocalDateTime start,
             LocalDateTime end
     );
 
-    // 3️⃣ Sum totalAmount for DEBIT or CREDIT (for report calculations)
+    //Sum totalAmount for DEBIT or CREDIT (for report calculations)
     @Query("""
         SELECT COALESCE(SUM(p.totalAmount), 0)
         FROM PurchaseLineItems p

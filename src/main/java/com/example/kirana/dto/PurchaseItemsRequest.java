@@ -12,9 +12,7 @@ public class PurchaseItemsRequest{
     private BigDecimal amount;
     private String currency;
 
-    // optional fields
-    private String supplierName;
-    private String invoiceNumber;
+
 
     // getters + setters
 }

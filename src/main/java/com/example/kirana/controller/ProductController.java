@@ -19,13 +19,13 @@ public class ProductController {
         this.productService = productService;
     }
 
-    // ✅ ADMIN / SUPER_ADMIN
+    //  ADMIN / SUPER_ADMIN
     @PostMapping
     public ResponseEntity<ProductResponse> createProduct(@RequestBody ProductRequest request) {
         return ResponseEntity.ok(productService.createProduct(request));
     }
 
-    // ✅ USER / ADMIN / SUPER_ADMIN
+    //  USER / ADMIN / SUPER_ADMIN
     @GetMapping("/{storeId}")
     public ResponseEntity<List<Products>> getProductsByStoreId(@PathVariable String storeId) {
         return ResponseEntity.ok(productService.getProductsByStoreId(storeId));

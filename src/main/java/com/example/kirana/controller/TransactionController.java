@@ -23,7 +23,7 @@ public class TransactionController {
         this.transactionService = transactionService;
     }
 
-    // ✅ 1) Create Transaction
+    // 1) Create Transaction
     // POST /transactions
     @PostMapping
     public ResponseEntity<TransactionResponse> createTransaction(
@@ -33,7 +33,7 @@ public class TransactionController {
         return ResponseEntity.ok(response);
     }
 
-    // ✅ 2) Get Transactions by StoreId
+    // 2) Get Transactions by StoreId
     // GET /transactions?storeId=STORE_001
     @GetMapping
     public ResponseEntity<List<TransactionSummary>> getTransactionsByStoreId(
@@ -42,7 +42,7 @@ public class TransactionController {
         List<TransactionSummary> response = transactionService.getTransactionsByStoreId(storeId);
         return ResponseEntity.ok(response);
     }
-    // ✅ 3) Get Transaction Details by transactionId
+    //  3) Get Transaction Details by transactionId
     // GET /transactions/{transactionId}
     @GetMapping("/{transactionId}")
     public ResponseEntity<TransactionDetailItemsResponse> getTransactionByTransactionId(

@@ -55,7 +55,8 @@ public class UserServiceImpl implements UserService {
             throw new RuntimeException("Only USER or ADMIN can be created from this API");
         }
 
-        // ✅ FIXED duplicate check
+        System.out.println("Creating role = " + roleName + " storeId = " + request.getStoreId());
+
         Optional<User> existing = userRepository.findByUserName(request.getUserName());
         if (existing.isPresent()) {
             throw new RuntimeException("Username already exists: " + request.getUserName());
@@ -78,7 +79,8 @@ public class UserServiceImpl implements UserService {
 
         userRepository.save(user);
 
-        // ✅ FIXED userRoleId set
+
+
         UserRole userRole = new UserRole();
         userRole.setUserRoleId("UR_" + UUID.randomUUID());
         userRole.setUserId(userId);

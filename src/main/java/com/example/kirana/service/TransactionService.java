@@ -7,7 +7,8 @@ import com.example.kirana.dto.TransactionSummary;
 
 import java.util.List;
 
-public interface TransactionService {
+public interface
+TransactionService {
 
     TransactionResponse createTransaction(TransactionRequest request);
 

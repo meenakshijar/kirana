@@ -23,6 +23,6 @@ public class Transactions {
     private String baseCurrency;
     private LocalDateTime createdAt;
 
-    // getters and setters
+
 
 }

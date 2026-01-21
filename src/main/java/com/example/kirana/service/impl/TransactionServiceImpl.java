@@ -44,19 +44,19 @@ public class TransactionServiceImpl implements TransactionService {
 
         List<TransactionLineItems> itemsToSave = new ArrayList<>();
 
-        // ✅ For now hardcode store base currency (later fetch from store in MongoDB)
+
         String baseCurrency = "INR";
 
         for (TransactionItemsRequest item : request.getItems()) {
 
-            // ✅ original total = amount * quantity (in original currency)
+
             BigDecimal originalTotal = item.getAmount()
                     .multiply(BigDecimal.valueOf(item.getQuantity()));
 
-            // ✅ conversion rate from Redis cache (or fallback API)
+
             BigDecimal rate = fxRateService.getFxRate(item.getCurrency(), baseCurrency);
 
-            // ✅ convert to base currency
+
             BigDecimal baseTotal = originalTotal.multiply(rate);
 
             TransactionLineItems lineItems = new TransactionLineItems();
@@ -72,11 +72,11 @@ public class TransactionServiceImpl implements TransactionService {
             lineItems.setPricePerItem(item.getAmount());          // original price/amount
             lineItems.setOriginalCurrency(item.getCurrency());    // original currency
 
-            // ✅ base conversion
+
             lineItems.setBaseCurrency(baseCurrency);
             lineItems.setConversionRate(rate);
 
-            // ✅ store total in base currency
+
             lineItems.setTotalProductAmount(baseTotal);
 
             lineItems.setCreatedAt(LocalDateTime.now());

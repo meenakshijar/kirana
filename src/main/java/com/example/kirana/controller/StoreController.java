@@ -17,13 +17,13 @@ public class StoreController {
         this.storeService = storeService;
     }
 
-    // ✅ SUPER_ADMIN
+    // SUPER_ADMIN
     @PostMapping
     public ResponseEntity<StoreResponse> createStore(@RequestBody StoreRequest request) {
         return ResponseEntity.ok(storeService.createStore(request));
     }
 
-    // ✅ SUPER_ADMIN
+    //  SUPER_ADMIN
     @GetMapping("/{storeId}")
     public ResponseEntity<Store> getStore(@PathVariable String storeId) {
         return ResponseEntity.ok(storeService.getStoreById(storeId));

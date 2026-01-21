@@ -1,9 +1,7 @@
 package com.example.kirana.service.impl;
 
 import com.example.kirana.dao.PurchaseLineItemsDao;
-import com.example.kirana.dto.PurchaseItemsRequest;
-import com.example.kirana.dto.PurchaseRequest;
-import com.example.kirana.dto.PurchaseResponse;
+import com.example.kirana.dto.*;
 import com.example.kirana.model.TransactionType;
 import com.example.kirana.model.postgres.PurchaseLineItems;
 import com.example.kirana.service.FxRateService;
@@ -37,7 +35,7 @@ public class PurchaseServiceImpl implements PurchaseService {
 
         List<PurchaseLineItems> itemsToSave = new ArrayList<>();
 
-        // ✅ For now hardcode baseCurrency (later fetch from Store in Mongo)
+
         String baseCurrency = "INR";
 
         for (PurchaseItemsRequest item : request.getItems()) {
@@ -45,10 +43,10 @@ public class PurchaseServiceImpl implements PurchaseService {
             BigDecimal originalTotalAmount = item.getAmount()
                     .multiply(BigDecimal.valueOf(item.getQuantity()));
 
-            // ✅ get rate from Redis cache (or API fallback)
+
             BigDecimal rate = fxRateService.getFxRate(item.getCurrency(), baseCurrency);
 
-            // ✅ convert to base currency amount
+
             BigDecimal baseTotalAmount = originalTotalAmount.multiply(rate);
 
             PurchaseLineItems purchaseLineItems = new PurchaseLineItems();
@@ -64,11 +62,11 @@ public class PurchaseServiceImpl implements PurchaseService {
             purchaseLineItems.setPricePerItem(item.getAmount());
             purchaseLineItems.setOriginalCurrency(item.getCurrency());
 
-            // ✅ Set baseCurrency + conversionRate
+
             purchaseLineItems.setBaseCurrency(baseCurrency);
             purchaseLineItems.setConversionRate(rate);
 
-            // ✅ store total in base currency
+
             purchaseLineItems.setTotalAmount(baseTotalAmount);
 
             purchaseLineItems.setCreatedAt(LocalDateTime.now());
@@ -85,4 +83,46 @@ public class PurchaseServiceImpl implements PurchaseService {
 
         return response;
     }
+
+    @Override
+    public PurchaseDetailResponse getPurchaseByPurchaseId(String purchaseId) {
+
+        List<PurchaseLineItems> dbItems = purchaseLineItemsDao.findByPurchaseId(purchaseId);
+
+        if (dbItems.isEmpty()) {
+            throw new RuntimeException("Purchase not found: " + purchaseId);
+        }
+
+        String storeId = dbItems.get(0).getStoreId();
+        String transactionType = dbItems.get(0).getTransactionType().name();
+        String baseCurrency = dbItems.get(0).getBaseCurrency();
+
+        BigDecimal totalAmount = BigDecimal.ZERO;
+
+        List<PurchaseDetailItem> items = new ArrayList<>();
+
+        for (PurchaseLineItems li : dbItems) {
+            PurchaseDetailItem item = new PurchaseDetailItem();
+            item.setProductId(li.getProductId());
+            item.setQuantity(li.getQuantity());
+            item.setOriginalAmount(li.getPricePerItem());
+            item.setOriginalCurrency(li.getOriginalCurrency());
+            item.setExchangeRateUsed(li.getConversionRate());
+            item.setBaseAmount(li.getTotalAmount());
+
+            totalAmount = totalAmount.add(li.getTotalAmount());
+            items.add(item);
+        }
+
+        PurchaseDetailResponse response = new PurchaseDetailResponse();
+        response.setPurchaseId(purchaseId);
+        response.setStoreId(storeId);
+        response.setTransactionType(transactionType);
+        response.setBaseCurrency(baseCurrency);
+        response.setItems(items);
+        response.setTotalAmount(totalAmount);
+
+        return response;
+    }
+
 }

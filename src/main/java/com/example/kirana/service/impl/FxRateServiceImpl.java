@@ -26,23 +26,23 @@ public class FxRateServiceImpl implements FxRateService {
         String from = fromCurrency.toUpperCase();
         String to = toCurrency.toUpperCase();
 
-        // ✅ Same currency means rate = 1
+
         if (from.equals(to)) {
             return BigDecimal.ONE;
         }
 
         String key = "fx:" + from + ":" + to;
 
-        // ✅ 1) Check Redis cache
+        //1) Check Redis cache
         String cachedRate = redisTemplate.opsForValue().get(key);
         if (cachedRate != null) {
             return new BigDecimal(cachedRate);
         }
 
-        // ✅ 2) Call external FX API (placeholder for now)
+        //2) Call external FX API (placeholder for now)
         BigDecimal apiRate = callExternalFxApi(from, to);
 
-        // ✅ 3) Cache it in Redis with TTL
+        // 3) Cache it in Redis with TTL
         redisTemplate.opsForValue()
                 .set(key, apiRate.toString(), Duration.ofMinutes(5));
 

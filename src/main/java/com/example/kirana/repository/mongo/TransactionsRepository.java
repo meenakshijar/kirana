@@ -10,4 +10,5 @@ import java.util.List;
 public interface TransactionsRepository extends MongoRepository<Transactions, String> {
 
     List<Transactions> findByStoreId(String storeId);
+
 }

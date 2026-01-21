@@ -14,17 +14,17 @@ import java.util.List;
 public interface TransactionLineItemsRepository
         extends JpaRepository<TransactionLineItems, String> {
 
-    // 1️⃣ Fetch all line items of a transaction
+    //Fetch all line items of a transaction
     List<TransactionLineItems> findByTransactionId(String transactionId);
 
-    // 2️⃣ Fetch store transactions for weekly/monthly/yearly report (date range)
+    //Fetch store transactions for weekly/monthly/yearly report (date range)
     List<TransactionLineItems> findByStoreIdAndCreatedAtBetween(
             String storeId,
             LocalDateTime start,
             LocalDateTime end
     );
 
-    // 3️⃣ Sum totalProductAmount for CREDIT or DEBIT (for netflow)
+    // Sum totalProductAmount for CREDIT or DEBIT (for netflow)
     @Query("""
         SELECT COALESCE(SUM(t.totalProductAmount), 0)
         FROM TransactionLineItems t
