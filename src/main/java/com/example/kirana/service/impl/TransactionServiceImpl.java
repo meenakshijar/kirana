@@ -14,6 +14,7 @@ import com.example.kirana.repository.mongo.TransactionsRepository;
 import com.example.kirana.service.FxRateService;
 import com.example.kirana.service.TransactionService;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -35,7 +36,7 @@ public class TransactionServiceImpl implements TransactionService {
         this.transactionsRepository = transactionsRepository;
         this.fxRateService = fxRateService;
     }
-
+    @Transactional
     @Override
     public TransactionResponse createTransaction(TransactionRequest request) {
 

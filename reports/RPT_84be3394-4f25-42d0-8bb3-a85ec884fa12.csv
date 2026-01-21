@@ -1,0 +1,2 @@
+reportId,storeId,period,totalCredit,totalDebit,netFlow,generatedAt
+RPT_84be3394-4f25-42d0-8bb3-a85ec884fa12,STORE_001,MONTHLY,240.00,3500.00,-3260.00,2026-01-21T13:25:09.867835

@@ -11,6 +11,7 @@ import com.example.kirana.repository.mongo.UserRolesRepository;
 import com.example.kirana.service.UserService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
@@ -33,7 +34,7 @@ public class UserServiceImpl implements UserService {
         this.userRoleRepository = userRoleRepository;
         this.passwordEncoder = passwordEncoder;
     }
-
+    @Transactional
     @Override
     public CreateUserResponse createUser(CreateUserRequest request) {
 
@@ -55,7 +56,7 @@ public class UserServiceImpl implements UserService {
             throw new RuntimeException("Only USER or ADMIN can be created from this API");
         }
 
-        System.out.println("Creating role = " + roleName + " storeId = " + request.getStoreId());
+
 
         Optional<User> existing = userRepository.findByUserName(request.getUserName());
         if (existing.isPresent()) {

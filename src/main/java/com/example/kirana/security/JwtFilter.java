@@ -64,8 +64,7 @@ public class JwtFilter extends OncePerRequestFilter {
                             null,
                             List.of(authority)
                     );
-            System.out.println("PATH = " + request.getServletPath());
-            System.out.println("AUTH HEADER = " + request.getHeader("Authorization"));
+
 
             SecurityContextHolder.getContext().setAuthentication(authentication);
 

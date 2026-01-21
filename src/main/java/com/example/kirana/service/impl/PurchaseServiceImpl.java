@@ -7,6 +7,7 @@ import com.example.kirana.model.postgres.PurchaseLineItems;
 import com.example.kirana.service.FxRateService;
 import com.example.kirana.service.PurchaseService;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -25,7 +26,7 @@ public class PurchaseServiceImpl implements PurchaseService {
         this.purchaseLineItemsDao = purchaseLineItemsDao;
         this.fxRateService = fxRateService;
     }
-
+    @Transactional
     @Override
     public PurchaseResponse createPurchase(PurchaseRequest request) {
 

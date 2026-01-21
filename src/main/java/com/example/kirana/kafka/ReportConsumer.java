@@ -29,7 +29,7 @@ public class ReportConsumer {
 
     @KafkaListener(topics = "report-requests", groupId = "report-group")
     public void consumeReportRequest(ReportKafkaMessage message) {
-        System.out.println("🔥 CONSUMER RECEIVED MESSAGE: " + message.getReportId());
+        System.out.println(" CONSUMER RECEIVED MESSAGE: " + message.getReportId());
         try {
             String reportId = message.getReportId();
             String storeId = message.getStoreId();
@@ -77,13 +77,13 @@ public class ReportConsumer {
 
             BigDecimal netFlow = totalCredit.subtract(totalDebit);
 
-            // ✅ Ensure reports folder exists
+            // Ensure reports folder exists
             File dir = new File("reports");
             if (!dir.exists()) {
                 dir.mkdir();
             }
 
-            // ✅ Create CSV file
+            // Create CSV file
             File csvFile = new File("reports/" + reportId + ".csv");
 
             try (FileWriter writer = new FileWriter(csvFile)) {
@@ -94,10 +94,10 @@ public class ReportConsumer {
                         + LocalDateTime.now() + "\n");
             }
 
-            System.out.println("✅ Report generated: " + csvFile.getAbsolutePath());
+            System.out.println("Report generated: " + csvFile.getAbsolutePath());
 
         } catch (Exception e) {
-            System.out.println("❌ Report generation failed: " + e.getMessage());
+            System.out.println(" Report generation failed: " + e.getMessage());
         }
     }
 }

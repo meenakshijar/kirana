@@ -24,7 +24,7 @@ public class ReportController {
         this.reportProducer = reportProducer;
     }
 
-    // ✅ POST /report/summary (ASYNC)
+    // POST /report/summary (ASYNC)
     @PostMapping("/summary")
     public ResponseEntity<Map<String, Object>> requestReport(@RequestBody ReportRequest request) {
 
@@ -47,7 +47,7 @@ public class ReportController {
     }
 
 
-    // ✅ GET /report/download/{reportId}
+    // GET /report/download/{reportId}
     @GetMapping("/download/{reportId}")
     public ResponseEntity<?> downloadReport(@PathVariable String reportId) {
 
