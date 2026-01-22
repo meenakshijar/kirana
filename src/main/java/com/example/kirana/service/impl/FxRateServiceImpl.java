@@ -3,17 +3,21 @@ package com.example.kirana.service.impl;
 import com.example.kirana.service.FxRateService;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
 import java.math.BigDecimal;
 import java.time.Duration;
+import java.util.Map;
 
 @Service
 public class FxRateServiceImpl implements FxRateService {
 
     private final StringRedisTemplate redisTemplate;
+    private final RestTemplate restTemplate;
 
-    public FxRateServiceImpl(StringRedisTemplate redisTemplate) {
+    public FxRateServiceImpl(StringRedisTemplate redisTemplate, RestTemplate restTemplate) {
         this.redisTemplate = redisTemplate;
+        this.restTemplate = restTemplate;
     }
 
     @Override
@@ -26,32 +30,40 @@ public class FxRateServiceImpl implements FxRateService {
         String from = fromCurrency.toUpperCase();
         String to = toCurrency.toUpperCase();
 
-
         if (from.equals(to)) {
             return BigDecimal.ONE;
         }
-
         String key = "fx:" + from + ":" + to;
 
-        //1) Check Redis cache
         String cachedRate = redisTemplate.opsForValue().get(key);
         if (cachedRate != null) {
             return new BigDecimal(cachedRate);
         }
 
-        //2) Call external FX API (placeholder for now)
         BigDecimal apiRate = callExternalFxApi(from, to);
 
-        // 3) Cache it in Redis with TTL
-        redisTemplate.opsForValue()
-                .set(key, apiRate.toString(), Duration.ofMinutes(5));
+        redisTemplate.opsForValue().set(key, apiRate.toString(), Duration.ofMinutes(5));
 
         return apiRate;
     }
 
     private BigDecimal callExternalFxApi(String from, String to) {
-        // TODO: Replace with real API call using RestTemplate/WebClient
-        // Hard-coded fallback for now
-        return new BigDecimal("83.25");
+
+        String url = "https://api.fxratesapi.com/latest?base=" + from + "&symbols=" + to;
+
+        Map response = restTemplate.getForObject(url, Map.class);
+
+        if (response == null || !response.containsKey("rates")) {
+            throw new RuntimeException("FX API invalid response");
+        }
+
+        Map<String, Object> rates = (Map<String, Object>) response.get("rates");
+
+        Object rateObj = rates.get(to);
+        if (rateObj == null) {
+            throw new RuntimeException("FX rate not found for: " + from + " -> " + to);
+        }
+
+        return new BigDecimal(rateObj.toString());
     }
 }

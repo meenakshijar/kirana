@@ -4,6 +4,7 @@ import com.example.kirana.dto.ProductRequest;
 import com.example.kirana.dto.ProductResponse;
 import com.example.kirana.model.mongo.Products;
 import com.example.kirana.service.ProductService;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -21,7 +22,7 @@ public class ProductController {
 
     //  ADMIN / SUPER_ADMIN
     @PostMapping
-    public ResponseEntity<ProductResponse> createProduct(@RequestBody ProductRequest request) {
+    public ResponseEntity<ProductResponse> createProduct(@Valid @RequestBody ProductRequest request) {
         return ResponseEntity.ok(productService.createProduct(request));
     }
 

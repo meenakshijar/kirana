@@ -4,6 +4,7 @@ import com.example.kirana.dto.ProductRequest;
 import com.example.kirana.dto.ProductResponse;
 import com.example.kirana.model.mongo.Products;
 import com.example.kirana.repository.mongo.ProductsRepository;
+import com.example.kirana.repository.mongo.StoreRepository;
 import com.example.kirana.service.ProductService;
 import org.springframework.stereotype.Service;
 
@@ -15,13 +16,19 @@ import java.util.UUID;
 public class ProductServiceImpl implements ProductService {
 
     private final ProductsRepository productRepository;
+    private final StoreRepository storeRepository;
 
-    public ProductServiceImpl(ProductsRepository productRepository) {
+    public ProductServiceImpl(ProductsRepository productRepository, StoreRepository storeRepository) {
         this.productRepository = productRepository;
+        this.storeRepository = storeRepository;
     }
 
     @Override
     public ProductResponse createProduct(ProductRequest request) {
+        boolean storeExists = storeRepository.existsById(request.getStoreId());
+        if (!storeExists) {
+            throw new RuntimeException("Store not found: " + request.getStoreId());
+        }
 
         String productId = "PROD_" + UUID.randomUUID();
 

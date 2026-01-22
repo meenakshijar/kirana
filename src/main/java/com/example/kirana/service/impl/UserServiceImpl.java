@@ -6,6 +6,7 @@ import com.example.kirana.model.mongo.Role;
 import com.example.kirana.model.mongo.User;
 import com.example.kirana.model.mongo.UserRole;
 import com.example.kirana.repository.mongo.RolesRepository;
+import com.example.kirana.repository.mongo.StoreRepository;
 import com.example.kirana.repository.mongo.UserRepository;
 import com.example.kirana.repository.mongo.UserRolesRepository;
 import com.example.kirana.service.UserService;
@@ -24,17 +25,20 @@ public class UserServiceImpl implements UserService {
     private final RolesRepository roleRepository;
     private final UserRolesRepository userRoleRepository;
     private final PasswordEncoder passwordEncoder;
+    private final StoreRepository storeRepository;
+
 
     public UserServiceImpl(UserRepository userRepository,
                            RolesRepository roleRepository,
                            UserRolesRepository userRoleRepository,
-                           PasswordEncoder passwordEncoder) {
+                           PasswordEncoder passwordEncoder, StoreRepository storeRepository) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.userRoleRepository = userRoleRepository;
         this.passwordEncoder = passwordEncoder;
+        this.storeRepository = storeRepository;
     }
-    @Transactional
+
     @Override
     public CreateUserResponse createUser(CreateUserRequest request) {
 
@@ -77,6 +81,12 @@ public class UserServiceImpl implements UserService {
         user.setUserName(request.getUserName());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setCreatedAt(LocalDateTime.now());
+
+        boolean storeExists = storeRepository.existsById(request.getStoreId());
+        if (!storeExists) {
+            throw new RuntimeException("Store not found: " + request.getStoreId());
+        }
+
 
         userRepository.save(user);
 

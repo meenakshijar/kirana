@@ -9,5 +9,5 @@ public class TransactionResponse {
     private String storeId;
     private String message;
 
-    // getters + setters
+
 }

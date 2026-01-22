@@ -5,6 +5,7 @@ import com.example.kirana.dto.PurchaseRequest;
 import com.example.kirana.dto.PurchaseResponse;
 import com.example.kirana.dto.TransactionDetailItemsResponse;
 import com.example.kirana.service.PurchaseService;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -22,7 +23,7 @@ public class PurchaseController {
 
 
     @PostMapping
-    public ResponseEntity<PurchaseResponse> createPurchase(@RequestBody PurchaseRequest request) {
+    public ResponseEntity<PurchaseResponse> createPurchase(@Valid @RequestBody PurchaseRequest request) {
         PurchaseResponse response = purchaseService.createPurchase(request);
         return ResponseEntity.ok(response);
     }

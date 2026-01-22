@@ -6,6 +6,7 @@ import com.example.kirana.dto.TransactionRequest;
 import com.example.kirana.dto.TransactionResponse;
 import com.example.kirana.dto.TransactionSummary;
 import com.example.kirana.service.TransactionService;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -27,7 +28,7 @@ public class TransactionController {
     // POST /transactions
     @PostMapping
     public ResponseEntity<TransactionResponse> createTransaction(
-            @RequestBody TransactionRequest request
+            @Valid @RequestBody TransactionRequest request
     ) {
         TransactionResponse response = transactionService.createTransaction(request);
         return ResponseEntity.ok(response);

@@ -3,6 +3,7 @@ package com.example.kirana.controller;
 import com.example.kirana.dto.CreateUserRequest;
 import com.example.kirana.dto.CreateUserResponse;
 import com.example.kirana.service.UserService;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,7 +18,7 @@ public class UsersController {
     }
 
     @PostMapping
-    public ResponseEntity<CreateUserResponse> createUser(@RequestBody CreateUserRequest request) {
+    public ResponseEntity<CreateUserResponse> createUser(@Valid @RequestBody CreateUserRequest request) {
         return ResponseEntity.ok(userService.createUser(request));
     }
 }

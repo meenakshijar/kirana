@@ -23,6 +23,5 @@ RoleDaoImpl implements RoleDao {
     }
 
 
-
 }
 

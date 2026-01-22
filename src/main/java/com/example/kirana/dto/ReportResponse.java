@@ -19,5 +19,5 @@ public class ReportResponse {
 
     private LocalDateTime generatedAt;
 
-    // getters + setters
+
 }

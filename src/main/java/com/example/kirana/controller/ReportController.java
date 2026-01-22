@@ -3,6 +3,7 @@ package com.example.kirana.controller;
 import com.example.kirana.dto.ReportKafkaMessage;
 import com.example.kirana.dto.ReportRequest;
 import com.example.kirana.kafka.ReportProducer;
+import jakarta.validation.Valid;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
@@ -26,7 +27,7 @@ public class ReportController {
 
     // POST /report/summary (ASYNC)
     @PostMapping("/summary")
-    public ResponseEntity<Map<String, Object>> requestReport(@RequestBody ReportRequest request) {
+    public ResponseEntity<Map<String, Object>> requestReport(@Valid @RequestBody ReportRequest request) {
 
         String reportId = "RPT_" + UUID.randomUUID();
 

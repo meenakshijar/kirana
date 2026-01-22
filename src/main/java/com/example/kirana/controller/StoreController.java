@@ -4,6 +4,7 @@ import com.example.kirana.dto.StoreRequest;
 import com.example.kirana.dto.StoreResponse;
 import com.example.kirana.model.mongo.Store;
 import com.example.kirana.service.StoreService;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,7 +20,7 @@ public class StoreController {
 
     // SUPER_ADMIN
     @PostMapping
-    public ResponseEntity<StoreResponse> createStore(@RequestBody StoreRequest request) {
+    public ResponseEntity<StoreResponse> createStore( @Valid @RequestBody StoreRequest request) {
         return ResponseEntity.ok(storeService.createStore(request));
     }
 

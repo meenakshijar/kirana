@@ -3,6 +3,7 @@ package com.example.kirana.controller;
 import com.example.kirana.dto.LoginRequest;
 import com.example.kirana.dto.LoginResponse;
 import com.example.kirana.service.AuthService;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,7 +18,7 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest request) {
+    public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
 
 
         LoginResponse response = authService.login(
