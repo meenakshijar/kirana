@@ -8,6 +8,7 @@ import com.example.kirana.lock.RedissonLockService;
 import com.example.kirana.model.TransactionType;
 import com.example.kirana.model.mongo.Store;
 import com.example.kirana.repository.mongo.StoreRepository;
+import com.example.kirana.security.StoreAccessValidator;
 import com.example.kirana.service.ReportService;
 import org.redisson.api.RLock;
 import org.springframework.stereotype.Service;
@@ -16,6 +17,9 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
+/**
+ * The type Report service.
+ */
 @Service
 public class ReportServiceImpl implements ReportService {
 
@@ -23,15 +27,27 @@ public class ReportServiceImpl implements ReportService {
     private final PurchaseLineItemsDao purchaseLineItemsDao;
     private final StoreRepository storeRepository;
     private final RedissonLockService redissonLockService;
+    private final StoreAccessValidator storeAccessValidator;
 
+
+    /**
+     * Instantiates a new Report service.
+     *
+     * @param transactionLineItemsDao the transaction line items dao
+     * @param purchaseLineItemsDao    the purchase line items dao
+     * @param storeRepository         the store repository
+     * @param redissonLockService     the redisson lock service
+     * @param storeAccessValidator    the store access validator
+     */
     public ReportServiceImpl(TransactionLineItemsDao transactionLineItemsDao,
                              PurchaseLineItemsDao purchaseLineItemsDao,
                              StoreRepository storeRepository,
-                             RedissonLockService redissonLockService) {
+                             RedissonLockService redissonLockService, StoreAccessValidator storeAccessValidator) {
         this.transactionLineItemsDao = transactionLineItemsDao;
         this.purchaseLineItemsDao = purchaseLineItemsDao;
         this.storeRepository = storeRepository;
         this.redissonLockService = redissonLockService;
+        this.storeAccessValidator = storeAccessValidator;
     }
 
     @Override

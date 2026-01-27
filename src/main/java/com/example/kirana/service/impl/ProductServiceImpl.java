@@ -5,6 +5,7 @@ import com.example.kirana.dto.ProductResponse;
 import com.example.kirana.model.mongo.Products;
 import com.example.kirana.repository.mongo.ProductsRepository;
 import com.example.kirana.repository.mongo.StoreRepository;
+import com.example.kirana.security.StoreAccessValidator;
 import com.example.kirana.service.ProductService;
 import org.springframework.stereotype.Service;
 
@@ -17,21 +18,24 @@ public class ProductServiceImpl implements ProductService {
 
     private final ProductsRepository productRepository;
     private final StoreRepository storeRepository;
+    private final StoreAccessValidator storeAccessValidator;
 
-    public ProductServiceImpl(ProductsRepository productRepository, StoreRepository storeRepository) {
+
+    public ProductServiceImpl(ProductsRepository productRepository, StoreRepository storeRepository, StoreAccessValidator storeAccessValidator) {
         this.productRepository = productRepository;
         this.storeRepository = storeRepository;
+        this.storeAccessValidator = storeAccessValidator;
     }
 
     @Override
     public ProductResponse createProduct(ProductRequest request) {
+        storeAccessValidator.validateStoreAccess(request.getStoreId());
         boolean storeExists = storeRepository.existsById(request.getStoreId());
         if (!storeExists) {
             throw new RuntimeException("Store not found: " + request.getStoreId());
         }
 
         String productId = "PROD_" + UUID.randomUUID();
-
         Products product = new Products();
         product.setProductId(productId);
         product.setStoreId(request.getStoreId());
@@ -63,6 +67,7 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public List<Products> getProductsByStoreId(String storeId) {
+        storeAccessValidator.validateStoreAccess(storeId);
         return productRepository.findByStoreId(storeId);
     }
 }

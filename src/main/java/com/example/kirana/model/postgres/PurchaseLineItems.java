@@ -42,8 +42,6 @@ public class PurchaseLineItems {
     @Column(nullable = false)
     private BigDecimal totalAmount;
 
-
-
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 }

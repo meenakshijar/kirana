@@ -5,6 +5,7 @@ import com.example.kirana.dto.TransactionDetailItemsResponse;
 import com.example.kirana.dto.TransactionRequest;
 import com.example.kirana.dto.TransactionResponse;
 import com.example.kirana.dto.TransactionSummary;
+import com.example.kirana.security.StoreAccessValidator;
 import com.example.kirana.service.TransactionService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -20,8 +21,12 @@ public class TransactionController {
 
     private final TransactionService transactionService;
 
-    public TransactionController(TransactionService transactionService) {
+
+
+
+    public TransactionController(TransactionService transactionService, StoreAccessValidator storeAccessValidator) {
         this.transactionService = transactionService;
+
     }
 
     // 1) Create Transaction

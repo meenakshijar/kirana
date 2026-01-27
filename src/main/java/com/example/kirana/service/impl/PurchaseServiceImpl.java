@@ -5,6 +5,7 @@ import com.example.kirana.dto.*;
 import com.example.kirana.model.TransactionType;
 import com.example.kirana.model.postgres.PurchaseLineItems;
 import com.example.kirana.repository.mongo.StoreRepository;
+import com.example.kirana.security.StoreAccessValidator;
 import com.example.kirana.service.FxRateService;
 import com.example.kirana.service.PurchaseService;
 import org.redisson.api.RLock;
@@ -25,14 +26,17 @@ public class PurchaseServiceImpl implements PurchaseService {
     private final FxRateService fxRateService;
     private final StoreRepository storeRepository;
     private final RedissonLockService redissonLockService;
+    private final StoreAccessValidator storeAccessValidator;
+
 
 
     public PurchaseServiceImpl(PurchaseLineItemsDao purchaseLineItemsDao,
-                               FxRateService fxRateService, StoreRepository storeRepository, RedissonLockService redissonLockService) {
+                               FxRateService fxRateService, StoreRepository storeRepository, RedissonLockService redissonLockService, StoreAccessValidator storeAccessValidator) {
         this.purchaseLineItemsDao = purchaseLineItemsDao;
         this.fxRateService = fxRateService;
         this.storeRepository = storeRepository;
         this.redissonLockService = redissonLockService;
+        this.storeAccessValidator = storeAccessValidator;
     }
     @Transactional
     @Override
@@ -40,6 +44,8 @@ public class PurchaseServiceImpl implements PurchaseService {
         if (!storeRepository.existsById(request.getStoreId())) {
             throw new RuntimeException("Store not found: " + request.getStoreId());
         }
+        storeAccessValidator.validateStoreAccess(request.getStoreId());
+
         String purchaseId = "PUR_" + UUID.randomUUID();
 
         TransactionType type = TransactionType.valueOf(request.getTransactionType()); // mostly DEBIT

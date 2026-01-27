@@ -1,5 +1,4 @@
 package com.example.kirana.service.impl;
-
 import com.example.kirana.dao.TransactionLineItemsDao;
 import com.example.kirana.dto.TransactionDetailItemsRequest;
 import com.example.kirana.dto.TransactionDetailItemsResponse;
@@ -15,6 +14,7 @@ import com.example.kirana.model.postgres.TransactionLineItems;
 import com.example.kirana.repository.mongo.ProductsRepository;
 import com.example.kirana.repository.mongo.StoreRepository;
 import com.example.kirana.repository.mongo.TransactionsRepository;
+import com.example.kirana.security.StoreAccessValidator;
 import com.example.kirana.service.FxRateService;
 import com.example.kirana.service.TransactionService;
 import org.redisson.api.RLock;
@@ -27,6 +27,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * The type Transaction service.
+ */
 @Service
 public class TransactionServiceImpl implements TransactionService {
 
@@ -36,49 +39,50 @@ public class TransactionServiceImpl implements TransactionService {
     private final ProductsRepository productsRepository;
     private final StoreRepository storeRepository;
     private final RedissonLockService redissonLockService;
+    private final StoreAccessValidator storeAccessValidator;
 
+    /**
+     * Instantiates a new Transaction service.
+     *
+     * @param transactionLineItemsDao the transaction line items dao
+     * @param transactionsRepository  the transactions repository
+     * @param fxRateService           the fx rate service
+     * @param productsRepository      the products repository
+     * @param storeRepository         the store repository
+     * @param redissonLockService     the redisson lock service
+     * @param storeAccessValidator    the store access validator
+     */
     public TransactionServiceImpl(TransactionLineItemsDao transactionLineItemsDao,
                                   TransactionsRepository transactionsRepository,
                                   FxRateService fxRateService,
                                   ProductsRepository productsRepository,
                                   StoreRepository storeRepository,
-                                  RedissonLockService redissonLockService) {
+                                  RedissonLockService redissonLockService,
+                                  StoreAccessValidator storeAccessValidator) {
         this.transactionLineItemsDao = transactionLineItemsDao;
         this.transactionsRepository = transactionsRepository;
         this.fxRateService = fxRateService;
         this.productsRepository = productsRepository;
         this.storeRepository = storeRepository;
         this.redissonLockService = redissonLockService;
+        this.storeAccessValidator = storeAccessValidator;
     }
 
     @Transactional
     @Override
     public TransactionResponse createTransaction(TransactionRequest request) {
 
-        // Basic request validations
-        if (request.getStoreId() == null || request.getStoreId().isBlank()) {
-            throw new RuntimeException("storeId is required");
-        }
+        validateTransactionRequest(request);
 
-        if (request.getTransactionType() == null || request.getTransactionType().isBlank()) {
-            throw new RuntimeException("transactionType is required");
-        }
+        String storeId = request.getStoreId();
+        storeAccessValidator.validateStoreAccess(storeId);
 
-        if (request.getItems() == null || request.getItems().isEmpty()) {
-            throw new RuntimeException("Transaction items are required");
-        }
+        Store store = storeRepository.findById(storeId)
+                .orElseThrow(() -> new RuntimeException("Store not found: " + storeId));
 
-        // Fetch store ONCE
-        Store store = storeRepository.findById(request.getStoreId())
-                .orElseThrow(() -> new RuntimeException("Store not found: " + request.getStoreId()));
+        String baseCurrency = requireValue(store.getBaseCurrency(), "Base currency not configured for store: " + storeId);
 
-        String baseCurrency = store.getBaseCurrency();
-        if (baseCurrency == null || baseCurrency.isBlank()) {
-            throw new RuntimeException("Base currency not configured for store: " + request.getStoreId());
-        }
-
-        // Lock per store
-        String lockKey = "lock:transaction:store:" + request.getStoreId();
+        String lockKey = "lock:transaction:store:" + storeId;
         RLock lock = redissonLockService.lock(lockKey, 2, 15);
 
         if (lock == null) {
@@ -88,121 +92,124 @@ public class TransactionServiceImpl implements TransactionService {
         try {
             String transactionId = "TXN_" + UUID.randomUUID();
             TransactionType type = TransactionType.valueOf(request.getTransactionType().toUpperCase());
+            LocalDateTime now = LocalDateTime.now();
 
-            // Validate each item
-            for (TransactionItemsRequest item : request.getItems()) {
+            List<TransactionLineItems> itemsToSave = request.getItems().stream()
+                    .map(item -> validateAndBuildLineItem(item, storeId, transactionId, type, baseCurrency, now))
+                    .toList();
 
-                if (item.getProductId() == null || item.getProductId().isBlank()) {
-                    throw new RuntimeException("productId is required");
-                }
-
-                if (item.getQuantity() == null || item.getQuantity() <= 0) {
-                    throw new RuntimeException("Invalid quantity for product: " + item.getProductId());
-                }
-
-                if (item.getAmount() == null || item.getAmount().compareTo(BigDecimal.ZERO) <= 0) {
-                    throw new RuntimeException("Invalid amount for product: " + item.getProductId());
-                }
-
-                if (item.getCurrency() == null || item.getCurrency().isBlank()) {
-                    throw new RuntimeException("Currency is required for product: " + item.getProductId());
-                }
-
-                // Validate product exists + belongs to store
-                var product = productsRepository.findById(item.getProductId())
-                        .orElseThrow(() -> new RuntimeException("Product not found: " + item.getProductId()));
-
-                if (!request.getStoreId().equals(product.getStoreId())) {
-                    throw new RuntimeException(
-                            "Product " + item.getProductId() + " does not belong to store " + request.getStoreId()
-                    );
-                }
-            }
-
-            // Prepare Postgres ledger items
-            List<TransactionLineItems> itemsToSave = new ArrayList<>();
-
-            for (TransactionItemsRequest item : request.getItems()) {
-
-                BigDecimal originalTotal = item.getAmount()
-                        .multiply(BigDecimal.valueOf(item.getQuantity()));
-
-                BigDecimal rate = fxRateService.getFxRate(item.getCurrency(), baseCurrency);
-
-                BigDecimal baseTotal = originalTotal.multiply(rate);
-
-                TransactionLineItems lineItems = new TransactionLineItems();
-                lineItems.setTransactionItemId("TXN_ITEM_" + UUID.randomUUID());
-                lineItems.setTransactionId(transactionId);
-
-                lineItems.setStoreId(request.getStoreId());
-                lineItems.setTransactionType(type);
-
-                lineItems.setProductId(item.getProductId());
-                lineItems.setQuantity(item.getQuantity());
-
-                lineItems.setPricePerItem(item.getAmount());
-                lineItems.setOriginalCurrency(item.getCurrency());
-
-                lineItems.setBaseCurrency(baseCurrency);
-                lineItems.setConversionRate(rate);
-
-                lineItems.setTotalProductAmount(baseTotal);
-                lineItems.setCreatedAt(LocalDateTime.now());
-
-                itemsToSave.add(lineItems);
-            }
-
-            // Save Postgres
             transactionLineItemsDao.saveAll(itemsToSave);
 
-            // Calculate total
             BigDecimal txnTotal = itemsToSave.stream()
                     .map(TransactionLineItems::getTotalProductAmount)
                     .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-            // Sync Mongo view (transactions collection)
             Transactions txn = new Transactions();
             txn.setTransactionId(transactionId);
-            txn.setStoreId(request.getStoreId());
+            txn.setStoreId(storeId);
             txn.setTransactionType(type);
             txn.setTotalAmount(txnTotal);
             txn.setBaseCurrency(baseCurrency);
-            txn.setCreatedAt(LocalDateTime.now());
-
+            txn.setCreatedAt(now);
             transactionsRepository.save(txn);
 
-            // Response
-            TransactionResponse response = new TransactionResponse();
-            response.setTransactionId(transactionId);
-            response.setStoreId(request.getStoreId());
-            response.setMessage("Transaction recorded successfully");
-
-            return response;
+            return buildResponse(transactionId, storeId);
 
         } finally {
             redissonLockService.unlock(lock);
         }
     }
 
+    // ---------------- HELPERS ----------------
+
+    private void validateTransactionRequest(TransactionRequest request) {
+        requireValue(request.getStoreId(), "storeId is required");
+        requireValue(request.getTransactionType(), "transactionType is required");
+
+        if (request.getItems() == null || request.getItems().isEmpty()) {
+            throw new RuntimeException("Transaction items are required");
+        }
+    }
+
+    private TransactionLineItems validateAndBuildLineItem(TransactionItemsRequest item,
+                                                          String storeId,
+                                                          String transactionId,
+                                                          TransactionType type,
+                                                          String baseCurrency,
+                                                          LocalDateTime now) {
+
+        requireValue(item.getProductId(), "productId is required");
+        requirePositive(item.getQuantity(), "Invalid quantity for product: " + item.getProductId());
+        requirePositive(item.getAmount(), "Invalid amount for product: " + item.getProductId());
+        requireValue(item.getCurrency(), "Currency is required for product: " + item.getProductId());
+
+        var product = productsRepository.findById(item.getProductId())
+                .orElseThrow(() -> new RuntimeException("Product not found: " + item.getProductId()));
+
+        if (!storeId.equals(product.getStoreId())) {
+            throw new RuntimeException("Product " + item.getProductId() + " does not belong to store " + storeId);
+        }
+
+        BigDecimal originalTotal = item.getAmount().multiply(BigDecimal.valueOf(item.getQuantity()));
+        BigDecimal rate = fxRateService.getFxRate(item.getCurrency(), baseCurrency);
+        BigDecimal baseTotal = originalTotal.multiply(rate);
+
+        TransactionLineItems li = new TransactionLineItems();
+        li.setTransactionItemId("TXN_ITEM_" + UUID.randomUUID());
+        li.setTransactionId(transactionId);
+
+        li.setStoreId(storeId);
+        li.setTransactionType(type);
+
+        li.setProductId(item.getProductId());
+        li.setQuantity(item.getQuantity());
+
+        li.setPricePerItem(item.getAmount());
+        li.setOriginalCurrency(item.getCurrency());
+
+        li.setBaseCurrency(baseCurrency);
+        li.setConversionRate(rate);
+
+        li.setTotalProductAmount(baseTotal);
+        li.setCreatedAt(now);
+
+        return li;
+    }
+
+    private TransactionResponse buildResponse(String transactionId, String storeId) {
+        TransactionResponse response = new TransactionResponse();
+        response.setTransactionId(transactionId);
+        response.setStoreId(storeId);
+        response.setMessage("Transaction recorded successfully");
+        return response;
+    }
+
+    private String requireValue(String val, String message) {
+        if (val == null || val.isBlank()) throw new RuntimeException(message);
+        return val;
+    }
+
+    private void requirePositive(Integer value, String message) {
+        if (value == null || value <= 0) throw new RuntimeException(message);
+    }
+
+    private void requirePositive(BigDecimal value, String message) {
+        if (value == null || value.compareTo(BigDecimal.ZERO) <= 0) throw new RuntimeException(message);
+    }
+
+    // ------------------------------------------------
+
     @Override
     public List<TransactionSummary> getTransactionsByStoreId(String storeId) {
-
-        List<Transactions> transactions = transactionsRepository.findByStoreId(storeId);
-
-        List<TransactionSummary> result = new ArrayList<>();
-
-        for (Transactions view : transactions) {
+        return transactionsRepository.findByStoreId(storeId).stream().map(view -> {
             TransactionSummary summary = new TransactionSummary();
             summary.setTransactionId(view.getTransactionId());
             summary.setTransactionType(view.getTransactionType().name());
             summary.setTotalAmount(view.getTotalAmount());
             summary.setBaseCurrency(view.getBaseCurrency());
             summary.setCreatedAt(view.getCreatedAt());
-            result.add(summary);
-        }
-
-        return result;
+            return summary;
+        }).toList();
     }
 
     @Override
@@ -214,32 +221,29 @@ public class TransactionServiceImpl implements TransactionService {
             throw new RuntimeException("Transaction not found: " + transactionId);
         }
 
-        String storeId = dbItems.get(0).getStoreId();
-        String transactionType = dbItems.get(0).getTransactionType().name();
-        String baseCurrency = dbItems.get(0).getBaseCurrency();
+        TransactionLineItems first = dbItems.get(0);
 
         BigDecimal totalAmount = BigDecimal.ZERO;
         List<TransactionDetailItemsRequest> items = new ArrayList<>();
 
         for (TransactionLineItems li : dbItems) {
-
-            TransactionDetailItemsRequest detailItems = new TransactionDetailItemsRequest();
-            detailItems.setProductId(li.getProductId());
-            detailItems.setQuantity(li.getQuantity());
-            detailItems.setOriginalAmount(li.getPricePerItem());
-            detailItems.setOriginalCurrency(li.getOriginalCurrency());
-            detailItems.setExchangeRateUsed(li.getConversionRate());
-            detailItems.setBaseAmount(li.getTotalProductAmount());
+            TransactionDetailItemsRequest detail = new TransactionDetailItemsRequest();
+            detail.setProductId(li.getProductId());
+            detail.setQuantity(li.getQuantity());
+            detail.setOriginalAmount(li.getPricePerItem());
+            detail.setOriginalCurrency(li.getOriginalCurrency());
+            detail.setExchangeRateUsed(li.getConversionRate());
+            detail.setBaseAmount(li.getTotalProductAmount());
 
             totalAmount = totalAmount.add(li.getTotalProductAmount());
-            items.add(detailItems);
+            items.add(detail);
         }
 
         TransactionDetailItemsResponse response = new TransactionDetailItemsResponse();
         response.setTransactionId(transactionId);
-        response.setStoreId(storeId);
-        response.setTransactionType(transactionType);
-        response.setBaseCurrency(baseCurrency);
+        response.setStoreId(first.getStoreId());
+        response.setTransactionType(first.getTransactionType().name());
+        response.setBaseCurrency(first.getBaseCurrency());
         response.setItems(items);
         response.setTotalAmount(totalAmount);
 

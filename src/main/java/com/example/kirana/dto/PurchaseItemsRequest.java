@@ -5,6 +5,9 @@ import lombok.Data;
 
 import java.math.BigDecimal;
 
+/**
+ * The type Purchase items request.
+ */
 @Data
 public class PurchaseItemsRequest {
 

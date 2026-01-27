@@ -6,9 +6,17 @@ import org.redisson.config.Config;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+/**
+ * The type Redisson config.
+ */
 @Configuration
 public class RedissonConfig {
 
+    /**
+     * Redisson client redisson client.
+     *
+     * @return the redisson client
+     */
     @Bean(destroyMethod = "shutdown")
     public RedissonClient redissonClient() {
 

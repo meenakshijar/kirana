@@ -19,6 +19,7 @@ public class JwtFilter extends OncePerRequestFilter {
 
     private final JwtUtil jwtUtil;
 
+
     public JwtFilter(JwtUtil jwtUtil) {
         this.jwtUtil = jwtUtil;
     }
@@ -55,6 +56,8 @@ public class JwtFilter extends OncePerRequestFilter {
             String role = (String) claims.get("role"); // ADMIN / USER / SUPER_ADMIN
 
 
+
+
             SimpleGrantedAuthority authority =
                     new SimpleGrantedAuthority("ROLE_" + role);
 
@@ -65,6 +68,8 @@ public class JwtFilter extends OncePerRequestFilter {
                             List.of(authority)
                     );
 
+            String storeId = (String) claims.get("storeId");
+            authentication.setDetails(storeId);
 
             SecurityContextHolder.getContext().setAuthentication(authentication);
 
@@ -74,4 +79,6 @@ public class JwtFilter extends OncePerRequestFilter {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         }
     }
+
+
 }
