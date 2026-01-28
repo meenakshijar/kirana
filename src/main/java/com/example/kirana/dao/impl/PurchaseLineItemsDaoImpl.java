@@ -20,11 +20,6 @@ public class PurchaseLineItemsDaoImpl implements PurchaseLineItemsDao {
     }
 
     @Override
-    public PurchaseLineItems save(PurchaseLineItems item) {
-        return purchaseLineItemsRepository.save(item);
-    }
-
-    @Override
     public List<PurchaseLineItems> saveAll(List<PurchaseLineItems> items) {
         return purchaseLineItemsRepository.saveAll(items);
     }
@@ -34,14 +29,6 @@ public class PurchaseLineItemsDaoImpl implements PurchaseLineItemsDao {
         return purchaseLineItemsRepository.findByPurchaseId(purchaseId);
     }
 
-    @Override
-    public List<PurchaseLineItems> findByStoreIdAndCreatedAtBetween(
-            String storeId,
-            LocalDateTime start,
-            LocalDateTime end
-    ) {
-        return purchaseLineItemsRepository.findByStoreIdAndCreatedAtBetween(storeId, start, end);
-    }
 
     @Override
     public BigDecimal sumTotalByStoreAndTypeAndCreatedAtBetween(

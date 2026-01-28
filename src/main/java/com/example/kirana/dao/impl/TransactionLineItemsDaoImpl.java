@@ -19,12 +19,12 @@ public class TransactionLineItemsDaoImpl implements TransactionLineItemsDao {
     public TransactionLineItemsDaoImpl(TransactionLineItemsRepository transactionLineItemRepository) {
         this.transactionLineItemsRepository = transactionLineItemRepository;
     }
-
+/*
     @Override
     public TransactionLineItems save(TransactionLineItems item) {
         return transactionLineItemsRepository.save(item);
     }
-
+*/
     @Override
     public List<TransactionLineItems> saveAll(List<TransactionLineItems> items) {
         return transactionLineItemsRepository.saveAll(items);
@@ -33,15 +33,6 @@ public class TransactionLineItemsDaoImpl implements TransactionLineItemsDao {
     @Override
     public List<TransactionLineItems> findByTransactionId(String transactionId) {
         return transactionLineItemsRepository.findByTransactionId(transactionId);
-    }
-
-    @Override
-    public List<TransactionLineItems> findByStoreIdAndCreatedAtBetween(
-            String storeId,
-            LocalDateTime start,
-            LocalDateTime end
-    ) {
-        return transactionLineItemsRepository.findByStoreIdAndCreatedAtBetween(storeId, start, end);
     }
 
     @Override

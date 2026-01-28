@@ -10,17 +10,12 @@ import java.util.List;
 
 public interface TransactionLineItemsDao {
 
-    TransactionLineItems save(TransactionLineItems item);
+    //TransactionLineItems save(TransactionLineItems item);
 
     List<TransactionLineItems> saveAll(List<TransactionLineItems> items);
 
     List<TransactionLineItems> findByTransactionId(String transactionId);
 
-    List<TransactionLineItems> findByStoreIdAndCreatedAtBetween(
-            String storeId,
-            LocalDateTime start,
-            LocalDateTime end
-    );
 
     BigDecimal sumTotalByStoreAndTypeAndCreatedAtBetween(
             String storeId,
